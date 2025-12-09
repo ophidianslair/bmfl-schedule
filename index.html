@@ -68,12 +68,14 @@ function normalizeDate(str) {
 function getTodayTomorrow() {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   return {
-    today: today.toISOString().split('T')[0],
-    tomorrow: tomorrow.toISOString().split('T')[0],
-    todayPretty: today.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'}),
-    tomorrowPretty: tomorrow.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})
+    today: today.toISOString().split('T')[0],        // 2025-12-09
+    tomorrow: tomorrow.toISOString().split('T')[0],  // 2025-12-10
+    todayPretty: today.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }),
+    tomorrowPretty: tomorrow.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
   };
 }
 
