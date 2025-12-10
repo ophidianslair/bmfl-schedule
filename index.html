@@ -25,7 +25,93 @@
 </div>
 
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
+const CSV_URL = 'const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
+
+const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+  const dateIdx = headers.indexOf(DATE_COLUMN);
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+    if (values.length < headers.length) continue;
+    const row = {};
+    headers.forEach((h, idx) => row[h] = (values[idx] || '').replace(/^"|"$/g, ''));
+    if (row[DATE_COLUMN]) rows.push(row);
+  }
+  return rows;
+}
+
+function normalizeDate(str) {
+  if (!str) return null;
+  // Handles "11/21/2025", "12/10/2025 14:23", "tuesday" → null, etc.
+  const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return null;
+  const [_, month, day, year] = match;
+  return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+}
+
+function getTodayTomorrow() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return {
+    today: today.toISOString().split('T')[0],
+    tomorrow: tomorrow.toISOString().split('T')[0],
+    todayPretty: today.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }),
+    tomorrowPretty: tomorrow.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
+  };
+}
+
+function makeTable(rows, title) {
+  if (rows.length === 0) return `<div style="text-align:center; padding:40px; color:#666; font-size:18px;">No reservations for ${title}</div>`;
+
+  let html = `<h2>${title}</h2><table><thead><tr>
+    <th>Name</th><th>Boat</th><th>Truck</th><th>Destination</th><th>Expected Return</th><th>Departure Time</th><th>Notes</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r['Name'] || ''}</td>
+      <td>${r['Boat used'] || ''}</td>
+      <td>${r['Truck used'] || ''}</td>
+      <td>${r['Destination'] || ''}</td>
+      <td>${r['Expected return time.'] || ''}</td>
+      <td>${r['Departure Time'] || ''}</td>
+      <td>${r['List any issues or additional comments below:'] || ''}</td>
+    </tr>`;
+  });
+  return html + '</tbody></table>';
+}
+
+function render() {
+  const dates = getTodayTomorrow();
+
+  fetch(`${CSV_URL}&t=${Date.now()}`)
+    .then(r => r.text())
+    .then(csv => {
+      const data = parseCSV(csv);
+
+      const todayRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.today);
+      const tomorrowRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.tomorrow);
+
+      document.getElementById('today').innerHTML = makeTable(todayRows, `Today – ${dates.todayPretty}`);
+      document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
+
+      document.getElementById('time').textContent = new Date().toLocaleString();
+    })
+    .catch(() => {
+      document.getElementById('today').innerHTML = '<p style="color:red">Error loading data</p>';
+    });
+}
+
+render();
+setInterval(render, 60000); // refresh every 60 seconds';
 const DATE_COLUMN = 'Departure Date (mm/dd/yyyy) and Time';
 
 function parseCSV(text) {
