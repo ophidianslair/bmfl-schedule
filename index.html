@@ -72,18 +72,18 @@ function makeTable(rows, title) {
   if (rows.length === 0) return `<div style="text-align:center; padding:40px; color:#666; font-size:18px;">No reservations for ${title}</div>`;
 
   let html = `<h2>${title}</h2><table><thead><tr>
-    <th>Name</th><th>Boat</th><th>Truck</th><th>Destination</th><th>Expected Return</th><th>Departure Time</th><th>Notes</th>
+    <th>Name (B)</th><th>Departure Date (C)</th><th>Boat (D)</th><th>Truck (E)</th><th>Destination (F)</th><th>Expected Return (I)</th><th>Departure Time (J)</th>
   </tr></thead><tbody>`;
 
   rows.forEach(r => {
     html += `<tr>
       <td>${r['Name'] || ''}</td>
+      <td>${r['Departure Date (mm/dd/yyyy)'] || ''}</td>
       <td>${r['Boat used'] || ''}</td>
       <td>${r['Truck used'] || ''}</td>
       <td>${r['Destination'] || ''}</td>
       <td>${r['Expected return time.'] || ''}</td>
       <td>${r['Departure Time'] || ''}</td>
-      <td>${r['List any issues or additional comments below:'] || ''}</td>
     </tr>`;
   });
   return html + '</tbody></table>';
