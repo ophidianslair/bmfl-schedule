@@ -1,117 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>BMFL Float Plan - Today & Tomorrow</title>
-<style>
-  body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f0f0f0; }
-  .box { max-width:1200px; margin:auto; background:white; padding:30px; border-radius:12px; box-shadow:0 6px 25px rgba(0,0,0,0.15); }
-  h1 { text-align:center; color:#1a73e8; margin-bottom:10px; }
-  h2 { color:#202124; border-bottom:3px solid #1a73e8; padding-bottom:10px; }
-  table { width:100%; border-collapse:collapse; margin:25px 0; font-size:15px; }
-  th { background:#1a73e8; color:white; padding:14px; text-align:left; }
-  td { padding:12px 14px; border-bottom:1px solid #ddd; background:#fafafa; }
-  tr:hover td { background:#f1f7ff; }
-  .updated { text-align:center; color:#666; margin-top:40px; font-size:0.95em; }
-  .no-events { font-style:italic; color:#888; text-align:center; padding:20px; }
-</style>
+  <meta charset="UTF-8">
+  <title>BMFL Float Plan - Today & Tomorrow</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f0f0f0; }
+    .box { max-width:1200px; margin:auto; background:white; padding:30px; border-radius:12px; box-shadow:0 6px 25px rgba(0,0,0,0.15); }
+    h1 { text-align:center; color:#1a73e8; margin-bottom:10px; }
+    h2 { color:#202124; border-bottom:3px solid #1a73e8; padding-bottom:10px; }
+    table { width:100%; border-collapse:collapse; margin:25px 0; font-size:15px; }
+    th { background:#1a73e8; color:white; padding:14px; text-align:left; }
+    td { padding:12px 14px; border-bottom:1px solid #ddd; background:#fafafa; }
+    tr:hover td { background:#f1f7ff; }
+    .updated { text-align:center; color:#666; margin-top:40px; font-size:0.95em; }
+    .no-events { font-style:italic; color:#888; text-align:center; padding:20px; }
+    .error { color:red; text-align:center; padding:20px; }
+  </style>
 </head>
 <body>
-<div class="box">
-  <h1>BMFL Float Plan Schedule</h1>
-  <div id="today"></div>
-  <div id="tomorrow"></div>
-  <div class="updated">Last updated: <span id="time">-</span></div>
-</div>
+  <div class="box">
+    <h1>BMFL Float Plan Schedule</h1>
+    <div id="today"></div>
+    <div id="tomorrow"></div>
+    <div class="updated">Last updated: <span id="time">-</span></div>
+  </div>
 
-<script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
-const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
+  <script>
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
+    const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
 
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-  const dateIdx = headers.indexOf(DATE_COLUMN);
-  const rows = [];
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) {
+        document.getElementById('today').innerHTML = '<div class="error">CSV has no data lines. Republish sheet.</div>';
+        return [];
+      }
+      const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
+        if (values.length < headers.length) continue;
+        const row = {};
+        headers.forEach((h, idx) => row[h] = values[idx] || '');
+        if (row[DATE_COLUMN]) rows.push(row);
+      }
+      return rows;
+    }
 
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
-    if (values.length < headers.length || dateIdx < 0) continue;
-    const row = {};
-    headers.forEach((h, idx) => row[h] = values[idx] || '');
-    if (row[DATE_COLUMN]) rows.push(row);
-  }
-  return rows;
-}
+    function normalizeDate(str) {
+      if (!str) return null;
+      const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (!match) return null;
+      const [_, month, day, year] = match;
+      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+    }
 
-function normalizeDate(str) {
-  if (!str) return null;
-  const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (!match) return null;
-  const [_, month, day, year] = match;
-  return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
-}
+    function getTodayTomorrow() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return {
+        today: today.toISOString().split('T')[0],
+        tomorrow: tomorrow.toISOString().split('T')[0],
+        todayPretty: today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+        tomorrowPretty: tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+      };
+    }
 
-function getTodayTomorrow() {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return {
-    today: today.toISOString().split('T')[0],
-    tomorrow: tomorrow.toISOString().split('T')[0],
-    todayPretty: today.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }),
-    tomorrowPretty: tomorrow.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
-  };
-}
+    function makeTable(rows, title) {
+      if (rows.length === 0) return `<div class="no-events">No reservations for ${title}</div>`;
+      let html = `<h2>${title}</h2><table><thead><tr>
+        <th>Name (B)</th><th>Departure Date (C)</th><th>Boat (D)</th><th>Truck (E)</th><th>Destination (F)</th><th>Expected Return (I)</th><th>Departure Time (J)</th>
+      </tr></thead><tbody>`;
+      rows.forEach(row => {
+        html += `<tr>
+          <td>${row['Name'] || ''}</td>
+          <td>${row['Departure Date (mm/dd/yyyy)'] || ''}</td>
+          <td>${row['Boat used'] || ''}</td>
+          <td>${row['Truck used'] || ''}</td>
+          <td>${row['Destination'] || ''}</td>
+          <td>${row['Expected return time.'] || ''}</td>
+          <td>${row['Departure Time'] || ''}</td>
+        </tr>`;
+      });
+      return html + '</tbody></table>';
+    }
 
-function makeTable(rows, title) {
-  if (rows.length === 0) return `<div class="no-events">No reservations for ${title}</div>`;
+    function render() {
+      const dates = getTodayTomorrow();
+      fetch(`${CSV_URL}&t=${Date.now()}`)
+        .then(r => r.text())
+        .then(csv => {
+          const data = parseCSV(csv);
+          const todayRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.today);
+          const tomorrowRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.tomorrow);
+          document.getElementById('today').innerHTML = makeTable(todayRows, `Today – ${dates.todayPretty}`);
+          document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
+          document.getElementById('time').textContent = new Date().toLocaleString();
+        })
+        .catch(err => {
+          document.getElementById('today').innerHTML = `<div class="error">Error loading data: ${err.message}. Check CSV publish.</div>`;
+        });
+    }
 
-  let html = `<h2>${title}</h2><table><thead><tr>
-    <th>Name (B)</th><th>Departure Date (C)</th><th>Boat (D)</th><th>Truck (E)</th><th>Destination (F)</th><th>Expected Return (I)</th><th>Departure Time (J)</th>
-  </tr></thead><tbody>`;
-
-  rows.forEach(row => {
-    html += `<tr>
-      <td>${row['Name'] || ''}</td>
-      <td>${row['Departure Date (mm/dd/yyyy)'] || ''}</td>
-      <td>${row['Boat used'] || ''}</td>
-      <td>${row['Truck used'] || ''}</td>
-      <td>${row['Destination'] || ''}</td>
-      <td>${row['Expected return time.'] || ''}</td>
-      <td>${row['Departure Time'] || ''}</td>
-    </tr>`;
-  });
-  return html + '</tbody></table>';
-}
-
-function render() {
-  const dates = getTodayTomorrow();
-
-  fetch(`${CSV_URL}&t=${Date.now()}`)
-    .then(r => r.text())
-    .then(csv => {
-      const data = parseCSV(csv);
-      const todayRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.today);
-      const tomorrowRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.tomorrow);
-
-      document.getElementById('today').innerHTML = makeTable(todayRows, `Today – ${dates.todayPretty}`);
-      document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
-      document.getElementById('time').textContent = new Date().toLocaleString();
-    })
-    .catch(err => {
-      document.getElementById('today').innerHTML = '<div style="color:red; text-align:center; padding:40px;">Error loading data: ' + err.message + '</div>';
-    });
-}
-
-// Load now + every 60s + midnight
-render();
-setInterval(render, 60000);
-const msToMidnight = new Date().setHours(24, 0, 0, 0) - Date.now();
-setTimeout(() => { render(); setInterval(render, 86400000); }, msToMidnight);
-</script>
+    // Load now + every 60s + midnight
+    render();
+    setInterval(render, 60000);
+    const msToMidnight = new Date().setHours(24, 0, 0, 0) - Date.now();
+    setTimeout(() => { render(); setInterval(render, 86400000); }, msToMidnight);
+  </script>
 </body>
 </html>
