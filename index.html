@@ -27,15 +27,18 @@
 
   <script>
     const CSV_URL = 'https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
-    const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';  // Correct column name from your sheet
+    const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
 
     function parseCSV(text) {
+      console.log('Raw CSV length:', text.length); // Debug
       const lines = text.trim().split(/\r?\n/);
+      console.log('Number of lines:', lines.length); // Debug
       if (lines.length < 2) {
-        document.getElementById('today').innerHTML = '<div class="error">CSV has no data lines. Republish sheet.</div>';
+        document.getElementById('today').innerHTML = '<div class="error">CSV has no data lines.</div>';
         return [];
       }
-      const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+      const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/^"|"$/g, '').trim());
+      console.log('Headers:', headers); // Debug
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
@@ -43,17 +46,10 @@
         if (values.length < headers.length) continue;
         const row = {};
         headers.forEach((h, idx) => row[h] = values[idx] || '');
-        rows.push(row); // Show all rows for testing
+        rows.push(row);
       }
+      console.log('Parsed rows:', rows.length); // Debug
       return rows;
-    }
-
-    function normalizeDate(str) {
-      if (!str) return null;
-      const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if (!match) return null;
-      const [_, month, day, year] = match;
-      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
     }
 
     function getTodayTomorrow() {
@@ -77,7 +73,7 @@
       rows.forEach(row => {
         html += `<tr>
           <td>${row['Name (list all folks involved, your name first)'] || row['Name'] || ''}</td>
-          <td>${row[DATE_COLUMN] || ''}</td>
+          <td>${row['Departure Date (mm/dd/yyyy)'] || ''}</td>
           <td>${row['Boat used'] || ''}</td>
           <td>${row['Truck used'] || ''}</td>
           <td>${row['Destination'] || ''}</td>
