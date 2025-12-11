@@ -14,7 +14,6 @@
     tr:hover td { background:#f1f7ff; }
     .updated { text-align:center; color:#666; margin-top:40px; font-size:0.95em; }
     .no-events { font-style:italic; color:#888; text-align:center; padding:20px; }
-    .error { color:red; text-align:center; padding:20px; }
   </style>
 </head>
 <body>
@@ -31,10 +30,7 @@
 
     function parseCSV(text) {
       const lines = text.trim().split(/\r?\n/);
-      if (lines.length < 2) {
-        document.getElementById('today').innerHTML = '<div class="error">CSV has no data lines. Republish sheet.</div>';
-        return [];
-      }
+      if (lines.length < 2) return [];
       const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
@@ -96,12 +92,12 @@
           const data = parseCSV(csv);
           const todayRows = data; // Show all rows for testing
           const tomorrowRows = []; // Hide tomorrow section
-          document.getElementById('today').innerHTML = makeTable(todayRows, document.getElementById('today').innerHTML = makeTable(todayRows, `All Active Reservations – Updated ${new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}`);
-          document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
+          document.getElementById('today').innerHTML = makeTable(todayRows, `All Active Reservations – Updated ${new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}`);
+          document.getElementById('tomorrow').innerHTML = '';
           document.getElementById('time').textContent = new Date().toLocaleString();
         })
         .catch(err => {
-          document.getElementById('today').innerHTML = `<div class="error">Error loading data: ${err.message}. Check CSV publish.</div>`;
+          document.getElementById('today').innerHTML = `<div style="color:red; text-align:center; padding:40px;">Error loading data: ${err.message}. Check CSV publish.</div>`;
         });
     }
 
