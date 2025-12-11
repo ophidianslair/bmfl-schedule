@@ -26,8 +26,8 @@
   </div>
 
   <script>
-    // Use a reliable CORS proxy
-    const CSV_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv');
+    // Use a stable CORS proxy
+    const CSV_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv');
     const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
 
     function parseCSV(text) {
@@ -62,7 +62,7 @@
         today: today.toISOString().split('T')[0],
         tomorrow: tomorrow.toISOString().split('T')[0],
         todayPretty: today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-        tomorrowPretty: today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+        tomorrowPretty: tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
       };
     }
 
