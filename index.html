@@ -27,7 +27,7 @@
 
   <script>
     const CSV_URL = 'https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vSsRekGv-RS1weoQOYj2f53938BZ2VVr0S9WT0VXgpW3XBKLuHWKcjwEPwyB_iJpTL60TIwKw4UQrb0/pub?gid=1802475877&single=true&output=csv';
-    const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';
+    const DATE_COLUMN = 'Departure Date (mm/dd/yyyy)';  // Correct column name from your sheet
 
     function parseCSV(text) {
       const lines = text.trim().split(/\r?\n/);
@@ -43,9 +43,17 @@
         if (values.length < headers.length) continue;
         const row = {};
         headers.forEach((h, idx) => row[h] = values[idx] || '');
-        rows.push(row); // Show all rows, even without date
+        rows.push(row); // Show all rows for testing
       }
       return rows;
+    }
+
+    function normalizeDate(str) {
+      if (!str) return null;
+      const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (!match) return null;
+      const [_, month, day, year] = match;
+      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
     }
 
     function getTodayTomorrow() {
@@ -68,8 +76,8 @@
       </tr></thead><tbody>`;
       rows.forEach(row => {
         html += `<tr>
-          <td>${row['Name'] || ''}</td>
-          <td>${row['Departure Date (mm/dd/yyyy)'] || ''}</td>
+          <td>${row['Name (list all folks involved, your name first)'] || row['Name'] || ''}</td>
+          <td>${row[DATE_COLUMN] || ''}</td>
           <td>${row['Boat used'] || ''}</td>
           <td>${row['Truck used'] || ''}</td>
           <td>${row['Destination'] || ''}</td>
@@ -99,9 +107,11 @@
         });
     }
 
-    // Load now + every 60s
+    // Load now + every 60s + midnight
     render();
     setInterval(render, 60000);
+    const msToMidnight = new Date().setHours(24, 0, 0, 0) - Date.now();
+    setTimeout(() => { render(); setInterval(render, 86400000); }, msToMidnight);
   </script>
 </body>
 </html>
