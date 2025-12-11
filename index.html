@@ -94,8 +94,8 @@
         .then(r => r.text())
         .then(csv => {
           const data = parseCSV(csv);
-          const todayRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.today);
-          const tomorrowRows = data.filter(r => normalizeDate(r[DATE_COLUMN]) === dates.tomorrow);
+          const todayRows = data; // Show all rows for testing
+          const tomorrowRows = []; // Hide tomorrow section
           document.getElementById('today').innerHTML = makeTable(todayRows, `Today – ${dates.todayPretty}`);
           document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
           document.getElementById('time').textContent = new Date().toLocaleString();
