@@ -96,7 +96,7 @@
           const data = parseCSV(csv);
           const todayRows = data; // Show all rows for testing
           const tomorrowRows = []; // Hide tomorrow section
-          document.getElementById('today').innerHTML = makeTable(todayRows, `Today – ${dates.todayPretty}`);
+          document.getElementById('today').innerHTML = makeTable(todayRows, `All Active Reservations – Updated ${new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}`;
           document.getElementById('tomorrow').innerHTML = makeTable(tomorrowRows, `Tomorrow – ${dates.tomorrowPretty}`);
           document.getElementById('time').textContent = new Date().toLocaleString();
         })
